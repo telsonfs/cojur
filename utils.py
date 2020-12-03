@@ -50,12 +50,13 @@ def create_corpus(description_arr):
     train_docs = []
     test_docs = []
 
-    amount_text = 0
+    amount_text = 10
 
-    lines = []
+    named_entities = []
+    info = []
     words = []
     chars = []
-    df_note = pd.DataFrame({'named_entities': []})
+    
     for description in description_arr:
         named_entities_arr = []
 
@@ -73,22 +74,25 @@ def create_corpus(description_arr):
             named_entities_arr.extend(re.findall(r'Emenda\sConstitucional\sno\s\d+.\d+|Emenda\sConstitucional\sno\s\d+', text))
 
             if named_entities_arr:
-                amount_text += 1
                 corpus, text_tokens = make_note(text, named_entities_arr)
 
-                if amount_text < 9: 
+                if amount_text % 10 < 8: 
                     train_docs.extend(corpus)
-                    train_docs.append(' ')
+                    train_docs.append(' ')          
+                    info.extend(['train'] * len(named_entities_arr))
 
-                elif amount_text < 11: 
+                else: 
                     test_docs.extend(corpus)
                     test_docs.append(' ')
+                    info.extend(['test'] * len(named_entities_arr))
 
-                else: amount_text = 0
-
+                amount_text += 1
                 words.extend(text_tokens)
-                df_note = df_note.append(named_entities_arr, ignore_index=True)
-
+                named_entities.extend(named_entities_arr)              
+                
+                
+    df_note = pd.DataFrame({'named_entities': named_entities, 'type': info})
+    
     with open('dataset/train.txt', 'w') as arquivo:
         for train in train_docs: arquivo.write(f'{train}\n')
                 
