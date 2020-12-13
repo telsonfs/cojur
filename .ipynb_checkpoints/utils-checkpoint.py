@@ -1,9 +1,24 @@
 import pandas as pd
+import numpy as np
 import nltk
 from nltk import tokenize
 import re
 
 nltk.download('punkt')
+
+def alter_cols(df: pd.DataFrame) -> pd.DataFrame:
+    """faz um tratamento nas colunas dataPublished e legislationType"""
+    normas = df.copy()
+    df['datePublished'] = pd.to_datetime(df['datePublished'])
+    df['legislationType'] = df['legislationType'].apply(lambda x : x.split("/")[-1] if x else np.nan)
+    return df
+
+def load_into_dataframe(records: list) -> pd.DataFrame:
+    """carrega os dados em um dataframe"""
+    content = [{k: data.get(k, None) for k in ('legislationIdentifier', 'legislationType', 'description',  'keywords',  'datePublished')} for data in records]
+    df = pd.DataFrame(content)
+    df = alter_cols(df)
+    return df
 
 def make_tag_entity(named_entity):
     dict_tag = {
@@ -19,7 +34,7 @@ def make_tag_entity(named_entity):
 
     for key, value in dict_tag.items():
         if str(key) in str(named_entity): return value
-    
+
 def make_note(text, named_entity_arr):
     anotated_text = []
     text_tokenize = tokenize.word_tokenize(text, language = 'portuguese')
@@ -45,6 +60,7 @@ def make_note(text, named_entity_arr):
             i += 1
             
     return anotated_text, text_tokenize
+
 
 def create_corpus(description_arr):
     train_docs = []
